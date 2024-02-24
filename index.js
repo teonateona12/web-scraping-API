@@ -1,12 +1,17 @@
 import express from "express";
 import * as cheerio from "cheerio";
 import axios from "axios";
+
 const app = express();
 const port = process.env.PORT || 5001;
-const url = "https://www.bdh-online.de/patienten/therapeutensuche/?seite=1";
+const urlFirst =
+  "https://www.bdh-online.de/patienten/therapeutensuche/?seite=1";
+const urlSecond =
+  "https://www.bdh-online.de/patienten/therapeutensuche/?seite=2";
+
 let results = [];
 
-const fetchData = async () => {
+const fetchData = async (url) => {
   try {
     const response = await axios.get(url);
     const $ = cheerio.load(response.data);
@@ -40,13 +45,21 @@ const fetchData = async () => {
       }
     });
 
-    results = await Promise.all(promises);
-    console.log(results);
+    const newData = await Promise.all(promises);
+    return newData;
   } catch (error) {
     console.error("Error:", error);
+    return [];
   }
 };
-fetchData();
+
+const fetchAllData = async () => {
+  const dataFirst = await fetchData(urlFirst);
+  const dataSecond = await fetchData(urlSecond);
+  results = results.concat(dataFirst, dataSecond);
+};
+
+fetchAllData();
 
 app.get("/person", (req, res) => {
   res.send(results);
