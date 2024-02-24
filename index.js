@@ -1,6 +1,8 @@
 import express from "express";
 import * as cheerio from "cheerio";
 import axios from "axios";
+import cors from "cors";
+import bodyParser from "body-parser";
 
 const app = express();
 const port = process.env.PORT || 5001;
@@ -10,7 +12,8 @@ const urlSecond =
   "https://www.bdh-online.de/patienten/therapeutensuche/?seite=2";
 
 let results = [];
-
+app.use(bodyParser.json());
+app.use(cors());
 const fetchData = async (url) => {
   try {
     const response = await axios.get(url);
@@ -61,7 +64,7 @@ const fetchAllData = async () => {
 
 fetchAllData();
 
-app.get("/person", (req, res) => {
+app.get("/api/person", (req, res) => {
   res.send(results);
 });
 
