@@ -8,28 +8,44 @@ let results = [];
 
 const fetchData = async () => {
   try {
-    let response = await axios.get(url);
+    const response = await axios.get(url);
     const $ = cheerio.load(response.data);
-    const results = [];
+
+    let promises = [];
+
     $("tbody > tr").each((i, el) => {
       const name = $(el).find("td:nth-child(1)").text().trim();
       const zip = $(el).find("td:nth-child(3)").text().trim();
       const city = $(el).find("td:nth-child(4)").text().trim();
+      const detailLink = $(el).find("td:nth-child(6) a").attr("href");
 
-      const person = {
-        name: name.trim(),
-        zip: parseInt(zip, 10),
-        city: city.trim(),
-      };
-      results.push(person);
+      if (detailLink) {
+        const detailUrl = new URL(detailLink, url);
+        promises.push(
+          axios.get(detailUrl.toString()).then((detailResponse) => {
+            const detailPage = cheerio.load(detailResponse.data);
+            const aElementText = detailPage("td:nth-child(3) a").text().trim();
+            const [firstName, lastName] = name.split(",");
+            const person = {
+              firstName: firstName.trim(),
+              lastName: lastName.trim(),
+              zip: parseInt(zip, 10),
+              email: aElementText,
+              city: city,
+            };
+
+            return person;
+          })
+        );
+      }
     });
 
+    results = await Promise.all(promises);
     console.log(results);
   } catch (error) {
     console.error("Error:", error);
   }
 };
-
 fetchData();
 
 app.get("/person", (req, res) => {
