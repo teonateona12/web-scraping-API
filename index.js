@@ -13,9 +13,13 @@ const fetchData = async () => {
     const results = [];
     $("tbody > tr").each((i, el) => {
       const name = $(el).find("td:nth-child(1)").text().trim();
+      const zip = $(el).find("td:nth-child(3)").text().trim();
+      const city = $(el).find("td:nth-child(4)").text().trim();
 
       const person = {
-        name: name,
+        name: name.trim(),
+        zip: parseInt(zip, 10),
+        city: city.trim(),
       };
       results.push(person);
     });
